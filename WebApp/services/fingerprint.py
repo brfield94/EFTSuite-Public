@@ -267,40 +267,23 @@ class Fingerprint:
         return self.converted
 
     def process_and_convert_wsq(self, bitrate=2.25, type4=False, resolution_scale: float = 1.0):
-        """
-        Compresses the image using WSQ.
-        """
         self._prepare_dimensions(resolution_scale=resolution_scale)
-
-        # Save Raw first (needed for cwsq)
         raw_path = os.path.join(self.tmpdir, self.name + ".raw")
-        with open(raw_path, "wb") as f:
-            f.write(self.img.tobytes())
-            
+        with open(raw_path, "wb") as f: f.write(self.img.tobytes())
         wsq_path = os.path.join(self.tmpdir, self.name + ".wsq")
-        
-        try:
-            convert_to_wsq(
-                raw_path, 
-                wsq_path, 
-                int(self.hll), 
-                int(self.vll), 
-                bitrate=bitrate
-            )
+        import subprocess
+        target_bitrate = "0.75" if type4 else str(bitrate)
+        cmd = ["cwsq", target_bitrate, "wsq", raw_path, "-raw_in", f"{self.hll},{self.vll},8,500"]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        native_wsq = raw_path.replace(".raw", ".wsq")
+        if os.path.exists(native_wsq):
+            os.rename(native_wsq, wsq_path)
+            if os.path.exists(raw_path): os.remove(raw_path)
             self.converted = wsq_path
-            self.cga = "WSQ20" # For Type-14. Type-4 will map this to 1.
-            print(f"FP {self.fp_number} Converted to WSQ: {wsq_path} (Rate: {bitrate})")
-        except Exception as e:
-            print(f"WSQ Conversion failed: {e}")
-            return None
-
-        if not type4 and int(self.fp_number) >= 13:
-            # Segment needs PNG
-            png_path = os.path.join(self.tmpdir, self.name + ".png")
-            if not os.path.exists(png_path):
-                cv2.imwrite(png_path, self.img)
-            self.segment()
-
+            self.cga = "WSQ"
+        else:
+            self.converted = raw_path
+            self.cga = "NONE"
         return self.converted
 
     def process_and_convert(self, compression_ratio=10):
