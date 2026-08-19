@@ -272,7 +272,7 @@ class Fingerprint:
         with open(raw_path, "wb") as f: f.write(self.img.tobytes())
         wsq_path = os.path.join(self.tmpdir, self.name + ".wsq")
         import subprocess
-        target_bitrate = "0.75" if type4 else str(bitrate)
+        target_bitrate = "4.50" if type4 else str(bitrate)
         cmd = ["cwsq", target_bitrate, "wsq", raw_path, "-raw_in", f"{self.hll},{self.vll},8,500"]
         res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         native_wsq = raw_path.replace(".raw", ".wsq")
