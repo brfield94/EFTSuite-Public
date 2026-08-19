@@ -215,16 +215,11 @@ def convert_to_wsq(raw_path: str, output_path: str, width: int, height: int, bit
     # Note: cwsq arguments might vary by version, but this is the standard NBIS usage.
     
     command = [
-        "cwsq", 
-        str(bitrate), 
-        "wsq", 
-        output_path, 
-        "-r", 
-        raw_path, 
-        str(width), 
-        str(height), 
-        str(depth), 
-        str(ppi)
+        "cwsq",
+        str(bitrate),                             # <rate> (e.g., "0.75")
+        "wsq",                                 # <outfile extension string>
+        infile,                                # <infile>
+        "-r", f"{w},{h},{depth},{ppi}"         # -r width,height,depth,ppi
     ]
     
     stdout, stderr, returncode = run_command(command, cwd=os.path.dirname(raw_path))
